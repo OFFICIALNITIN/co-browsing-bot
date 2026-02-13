@@ -1,13 +1,5 @@
-// =============================================================================
-// domActions.ts — Raw DOM manipulation utilities for the Co-Browsing AI Assistant
-// All functions are SSR-safe (guarded with typeof window !== 'undefined')
-// =============================================================================
-
 import { PROJECTS } from "../constants";
 
-/**
- * Smooth scroll to a specific section by its element ID.
- */
 export function scrollToSection(sectionId: string): string {
     if (typeof window === "undefined") return "Not in browser environment.";
     const el = document.getElementById(sectionId);
@@ -18,10 +10,6 @@ export function scrollToSection(sectionId: string): string {
     return `Section "${sectionId}" not found on the page.`;
 }
 
-/**
- * Scroll the window in a given direction.
- * Supports: "up", "down", "top", "bottom"
- */
 export function scrollWindow(direction: string): string {
     if (typeof window === "undefined") return "Not in browser environment.";
     const amount = window.innerHeight * 0.75;
@@ -43,19 +31,13 @@ export function scrollWindow(direction: string): string {
     }
 }
 
-/**
- * Draw a temporary highlight box/overlay around an element matching the CSS selector.
- * The highlight fades out after ~2.5 seconds.
- */
 export function highlightElement(selector: string): string {
     if (typeof window === "undefined") return "Not in browser environment.";
     const el = document.querySelector(selector) as HTMLElement | null;
     if (!el) return `No element found for selector "${selector}".`;
 
-    // Scroll the element into view first
     el.scrollIntoView({ behavior: "smooth", block: "center" });
 
-    // Create an overlay div that matches the element's bounding box
     const rect = el.getBoundingClientRect();
     const overlay = document.createElement("div");
     overlay.style.cssText = `
@@ -74,14 +56,12 @@ export function highlightElement(selector: string): string {
   `;
     document.body.appendChild(overlay);
 
-    // Animate a pulse effect
     let opacity = 1;
     const pulse = setInterval(() => {
         opacity = opacity === 1 ? 0.5 : 1;
         overlay.style.opacity = String(opacity);
     }, 400);
 
-    // Remove after 2.5s
     setTimeout(() => {
         clearInterval(pulse);
         overlay.style.opacity = "0";
@@ -91,24 +71,16 @@ export function highlightElement(selector: string): string {
     return `Highlighted element matching "${selector}".`;
 }
 
-/**
- * Simulate a click on the first element matching the CSS selector.
- */
 export function clickElement(selector: string): string {
     if (typeof window === "undefined") return "Not in browser environment.";
     const el = document.querySelector(selector) as HTMLElement | null;
     if (!el) return `No element found for selector "${selector}".`;
 
     el.scrollIntoView({ behavior: "smooth", block: "center" });
-    // Small delay so the scroll completes before clicking
     setTimeout(() => el.click(), 400);
     return `Clicked element matching "${selector}".`;
 }
 
-/**
- * Read the text content from <main> or a specific section by ID.
- * Returns a trimmed version (max 3000 chars) to fit in context.
- */
 export function readPageContent(sectionId?: string): string {
     if (typeof window === "undefined") return "Not in browser environment.";
 
@@ -128,10 +100,6 @@ export function readPageContent(sectionId?: string): string {
     return text || "Section appears to be empty.";
 }
 
-/**
- * Fill form fields. Accepts an object with keys like name, email, message.
- * Dispatches React-compatible synthetic events.
- */
 export function fillForm(data: Record<string, string>): string {
     if (typeof window === "undefined") return "Not in browser environment.";
 
@@ -184,7 +152,6 @@ export function fillForm(data: Record<string, string>): string {
         }
     }
 
-    // Scroll to the contact section so the user sees the form
     const contactSection = document.getElementById("contact");
     if (contactSection) {
         contactSection.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -193,10 +160,6 @@ export function fillForm(data: Record<string, string>): string {
     return results.join(" ");
 }
 
-/**
- * Open a project's demo link or GitHub repo in a new tab by matching the project name.
- * Uses case-insensitive partial matching (e.g., "mockmate" matches "MockMate - AI Interview Platform").
- */
 export function openProjectLink(
     projectName: string,
     linkType: "demo" | "github" = "demo"
