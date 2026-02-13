@@ -2,8 +2,6 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { NextResponse } from 'next/server';
 import { RESUME_DATA, PROJECTS, SKILLS, EXPERIENCE } from '../../../constants';
 
-// Tool definitions for co-browsing actions
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const tools: any[] = [
     {
         functionDeclarations: [
@@ -127,12 +125,10 @@ export async function POST(req: Request) {
         const response = await ai.models.generateContent({
             model: "gemini-2.0-flash",
             contents: [
-                // Include chat history
                 ...(history || []).map((msg: { role: string; parts: { text: string }[] }) => ({
                     role: msg.role,
                     parts: msg.parts,
                 })),
-                // Add the current user message
                 {
                     role: "user",
                     parts: [{ text: message }],
@@ -143,9 +139,6 @@ export async function POST(req: Request) {
                 tools: tools as any,
             },
         });
-
-        // Extract function calls and text from the response
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const parts: any[] = response.candidates?.[0]?.content?.parts || [];
 
         const functionCalls = parts

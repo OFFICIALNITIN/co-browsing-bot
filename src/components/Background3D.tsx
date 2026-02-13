@@ -1,15 +1,9 @@
 "use client";
-// @ts-nocheck
 import React, { useRef, useMemo, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Points, PointMaterial } from '@react-three/drei';
 import * as THREE from 'three';
 
-// ============================================
-// UTILS & TEXTURES
-// ============================================
-
-// Singleton texture to prevent recreation lag
 let globalGlowTexture: THREE.CanvasTexture | null = null;
 function getGlowTexture() {
   if (globalGlowTexture) return globalGlowTexture;
@@ -43,9 +37,6 @@ interface AsteroidState {
   id: number;
 }
 
-// ============================================
-// PARTICLE COMET (Physics Aware)
-// ============================================
 interface CometData {
   startPos: THREE.Vector3;
   direction: THREE.Vector3;
@@ -183,9 +174,6 @@ const ParticleComet = ({ data, onComplete, texture, asteroidsRef }: {
   );
 };
 
-// ============================================
-// MANAGERS (Responsive)
-// ============================================
 const CometSystem = ({ asteroidsRef }: { asteroidsRef: React.MutableRefObject<AsteroidState[]> }) => {
   const [comets, setComets] = React.useState<CometData[]>([]);
   const lastSpawnRef = useRef(0);
@@ -409,9 +397,6 @@ const AsteroidField = ({ asteroidsRef }: { asteroidsRef: React.MutableRefObject<
   );
 };
 
-// ============================================
-// STARS
-// ============================================
 const StarField = ({ count = 5000 }: { count?: number }) => {
   const ref = useRef<any>(null);
   const [positions, colors] = useMemo(() => {
@@ -447,9 +432,6 @@ const StarField = ({ count = 5000 }: { count?: number }) => {
   );
 };
 
-// ============================================
-// MAIN COMPONENT
-// ============================================
 const Background3D: React.FC = () => {
   const asteroidsRef = useRef<AsteroidState[]>([]);
 

@@ -69,7 +69,6 @@ const ChatWidget: React.FC = () => {
 
       // Execute Tools if any
       if (data.functionCalls && data.functionCalls.length > 0) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         data.functionCalls.forEach((call: any) => {
           console.log("Executing Tool:", call.name, call.args);
 

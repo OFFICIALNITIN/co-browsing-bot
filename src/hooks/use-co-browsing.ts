@@ -21,7 +21,7 @@ export const useCoBrowsing = () => {
             const originalTransition = (element as HTMLElement).style.transition;
 
             (element as HTMLElement).style.transition = 'outline 0.3s ease';
-            (element as HTMLElement).style.outline = '4px solid #22c55e'; // Green highlight
+            (element as HTMLElement).style.outline = '4px solid #22c55e';
 
             setTimeout(() => {
                 (element as HTMLElement).style.outline = originalOutline;
