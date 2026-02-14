@@ -31,42 +31,108 @@ export function scrollWindow(direction: string): string {
     }
 }
 
-export function highlightElement(selector: string): string {
+export function highlightElement(selector: string, color?: string): string {
     if (typeof window === "undefined") return "Not in browser environment.";
-    const el = document.querySelector(selector) as HTMLElement | null;
+
+    const highlightColor = color || "#22c55e";
+    // Convert hex to rgba for background/shadow
+    const hexToRgba = (hex: string, alpha: number) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+    };
+
+    // Try querySelector first, fall back to text search if selector is invalid
+    let el: HTMLElement | null = null;
+    try {
+        el = document.querySelector(selector) as HTMLElement | null;
+    } catch {
+        // Invalid selector (e.g. :contains()) — try text-based fallback
+        console.warn(`[CoBrowsing] Invalid selector "${selector}", falling back to text search.`);
+    }
+
+    // Fallback: search by text content if querySelector failed or found nothing
+    if (!el) {
+        // Extract text hints from the selector (anything in quotes or after keywords)
+        const textHints = selector.match(/['"]([^'"]+)['"]/g)?.map(s => s.replace(/['"]/g, '')) || [];
+        // Also try extracting text from patterns like #some-id or .some-class
+        const idMatch = selector.match(/#([\w-]+)/);
+        if (idMatch) {
+            el = document.getElementById(idMatch[1]);
+        }
+
+        if (!el && textHints.length > 0) {
+            const searchText = textHints[0].toLowerCase();
+
+            // Search in priority tiers: headings first, then inline, then block
+            // This prevents matching a large wrapper div instead of the specific h3
+            const tiers = [
+                'h1, h2, h3, h4, h5, h6',
+                'span, a, button, label, p',
+                'div, section, article, li',
+            ];
+
+            for (const tierSelector of tiers) {
+                if (el) break;
+                const candidates = document.querySelectorAll(tierSelector);
+                let bestMatch: HTMLElement | null = null;
+                let bestLen = Infinity;
+
+                for (const candidate of candidates) {
+                    const htmlEl = candidate as HTMLElement;
+                    const text = htmlEl.textContent?.toLowerCase() || '';
+                    if (text.includes(searchText)) {
+                        // Among matches in same tier, prefer the smallest element
+                        if (text.length < bestLen) {
+                            bestMatch = htmlEl;
+                            bestLen = text.length;
+                        }
+                    }
+                }
+                if (bestMatch) {
+                    el = bestMatch;
+                }
+            }
+        }
+    }
+
     if (!el) return `No element found for selector "${selector}".`;
 
     el.scrollIntoView({ behavior: "smooth", block: "center" });
 
-    const rect = el.getBoundingClientRect();
-    const overlay = document.createElement("div");
-    overlay.style.cssText = `
-    position: fixed;
-    top: ${rect.top}px;
-    left: ${rect.left}px;
-    width: ${rect.width}px;
-    height: ${rect.height}px;
-    border: 2px solid #22c55e;
-    border-radius: 8px;
-    box-shadow: 0 0 20px rgba(34,197,94,0.4), inset 0 0 20px rgba(34,197,94,0.05);
-    background: rgba(34,197,94,0.08);
-    pointer-events: none;
-    z-index: 99999;
-    transition: opacity 0.5s ease;
-  `;
-    document.body.appendChild(overlay);
-
-    let opacity = 1;
-    const pulse = setInterval(() => {
-        opacity = opacity === 1 ? 0.5 : 1;
-        overlay.style.opacity = String(opacity);
-    }, 400);
-
+    // Wait a moment for scroll to settle before measuring position
     setTimeout(() => {
-        clearInterval(pulse);
-        overlay.style.opacity = "0";
-        setTimeout(() => overlay.remove(), 500);
-    }, 2500);
+        const rect = el!.getBoundingClientRect();
+        const overlay = document.createElement("div");
+        overlay.style.cssText = `
+        position: fixed;
+        top: ${rect.top}px;
+        left: ${rect.left}px;
+        width: ${rect.width}px;
+        height: ${rect.height}px;
+        border: 2px solid ${highlightColor};
+        border-radius: 8px;
+        box-shadow: 0 0 20px ${hexToRgba(highlightColor, 0.4)}, inset 0 0 20px ${hexToRgba(highlightColor, 0.05)};
+        background: ${hexToRgba(highlightColor, 0.08)};
+        pointer-events: none;
+        z-index: 99999;
+        transition: opacity 0.5s ease;
+        `;
+        document.body.appendChild(overlay);
+
+        let opacity = 1;
+        const pulse = setInterval(() => {
+            opacity = opacity === 1 ? 0.5 : 1;
+            overlay.style.opacity = String(opacity);
+        }, 400);
+
+        setTimeout(() => {
+            clearInterval(pulse);
+            overlay.style.opacity = "0";
+            setTimeout(() => overlay.remove(), 500);
+        }, 2500);
+    }, 300);
 
     return `Highlighted element matching "${selector}".`;
 }

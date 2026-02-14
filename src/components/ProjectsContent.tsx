@@ -9,6 +9,7 @@ const ProjectCard: React.FC<{ project: Project; idx: number; onQuickView: () => 
   return (
     // @ts-ignore
     <motion.div
+      data-project={project.title.toLowerCase().replace(/\s+/g, '-')}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)" }}

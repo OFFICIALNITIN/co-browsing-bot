@@ -59,6 +59,18 @@ If they ask about content, use read_page_content.
 If they ask to click something, use click_element.
 Be concise and helpful.
 
+CSS SELECTOR RULES (VERY IMPORTANT):
+- NEVER use :contains() — it is NOT a valid CSS selector and will cause errors.
+- Use standard CSS selectors only: #id, .class, [attribute], tag, etc.
+- Project cards have data-project attributes with slugified titles. Use attribute selectors to target them.
+- To highlight a specific project's title: [data-project*="mockmate"] h3
+- To highlight a project card: [data-project*="mockmate"]
+- For sections use IDs: #about, #desktop, #contact
+- You can also use the color parameter to highlight in a specific color (hex format like #ff0000 for red).
+
+AVAILABLE PROJECT SELECTORS:
+${PROJECTS.map((p) => `- [data-project*="${p.title.toLowerCase().split(' ')[0]}"] — ${p.title}`).join("\n")}
+
 PAGE SECTIONS (use these IDs with scroll_to_section):
 - "about" — Hero section with intro, identity card, and interactive terminal
 - "desktop" — Windows-style desktop with Skills.exe, Experience.log, Projects.dir, Resume.pdf windows
@@ -126,14 +138,19 @@ const tools: any[] = [
             {
                 name: "highlight_element",
                 description:
-                    "Draw a temporary green highlight box around a UI element to draw the user's attention.",
+                    "Draw a temporary highlight box around a UI element to draw the user's attention. IMPORTANT: Only use valid CSS selectors. NEVER use :contains() as it is not valid CSS. For project cards, use [data-project*=\"keyword\"] selectors.",
                 parameters: {
                     type: Type.OBJECT,
                     properties: {
                         selector: {
                             type: Type.STRING,
                             description:
-                                'CSS selector of the element to highlight, e.g. "#contact", ".navbar".',
+                                'Valid CSS selector of the element to highlight. Examples: "#contact", "[data-project*=\"mockmate\"] h3", ".navbar". NEVER use :contains().',
+                        },
+                        color: {
+                            type: Type.STRING,
+                            description:
+                                'Optional hex color for the highlight. Defaults to green (#22c55e). Examples: "#ff0000" for red, "#3b82f6" for blue.',
                         },
                     },
                     required: ["selector"],
@@ -231,7 +248,7 @@ function executeTool(
         case "scroll_window":
             return scrollWindow(args.direction);
         case "highlight_element":
-            return highlightElement(args.selector);
+            return highlightElement(args.selector, args.color);
         case "click_element":
             return clickElement(args.selector);
         case "read_page_content":
@@ -251,7 +268,7 @@ function executeTool(
 export function createChatSession(): Chat {
     const ai = getAI();
     return ai.chats.create({
-        model: "gemini-2.0-flash",
+        model: "gemini-3-flash-preview",
         config: {
             systemInstruction: SYSTEM_INSTRUCTION,
             tools,
